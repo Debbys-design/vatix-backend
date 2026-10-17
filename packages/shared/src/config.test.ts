@@ -59,6 +59,78 @@ describe("loadBaseConfig", () => {
     const config = loadBaseConfig({ ...BASE_ENV, PORT: "4000" });
     expect(config.port).toBe(4000);
   });
+
+  describe("NODE_ENV validation", () => {
+    it("defaults to development when NODE_ENV is absent", () => {
+      const config = loadBaseConfig(BASE_ENV);
+      expect(config.nodeEnv).toBe("development");
+    });
+
+    it("defaults to development when NODE_ENV is empty", () => {
+      const config = loadBaseConfig({ ...BASE_ENV, NODE_ENV: "" });
+      expect(config.nodeEnv).toBe("development");
+    });
+
+    it("returns a valid NODE_ENV unchanged", () => {
+      const config = loadBaseConfig({ ...BASE_ENV, NODE_ENV: "production" });
+      expect(config.nodeEnv).toBe("production");
+    });
+
+    it("returns a valid NODE_ENV trimmed", () => {
+      const config = loadBaseConfig({ ...BASE_ENV, NODE_ENV: "  test  " });
+      expect(config.nodeEnv).toBe("test");
+    });
+
+    it("throws ENV_INVALID with variable NODE_ENV on an unknown value", () => {
+      const env = { ...BASE_ENV, NODE_ENV: "prodction" };
+      try {
+        loadBaseConfig(env);
+        throw new Error("expected to throw");
+      } catch (err) {
+        expect(err).toBeInstanceOf(ConfigValidationError);
+        expect((err as ConfigValidationError).code).toBe(
+          CONFIG_ERROR_CODES.ENV_INVALID
+        );
+        expect((err as ConfigValidationError).variable).toBe("NODE_ENV");
+      }
+    });
+  });
+
+  describe("LOG_LEVEL validation", () => {
+    it("defaults to info when LOG_LEVEL is absent", () => {
+      const config = loadBaseConfig(BASE_ENV);
+      expect(config.logLevel).toBe("info");
+    });
+
+    it("defaults to info when LOG_LEVEL is empty", () => {
+      const config = loadBaseConfig({ ...BASE_ENV, LOG_LEVEL: "" });
+      expect(config.logLevel).toBe("info");
+    });
+
+    it("returns a valid LOG_LEVEL unchanged", () => {
+      const config = loadBaseConfig({ ...BASE_ENV, LOG_LEVEL: "debug" });
+      expect(config.logLevel).toBe("debug");
+    });
+
+    it("returns a valid LOG_LEVEL trimmed", () => {
+      const config = loadBaseConfig({ ...BASE_ENV, LOG_LEVEL: "  warn  " });
+      expect(config.logLevel).toBe("warn");
+    });
+
+    it("throws ENV_INVALID with variable LOG_LEVEL on an unknown value", () => {
+      const env = { ...BASE_ENV, LOG_LEVEL: "verbose" };
+      try {
+        loadBaseConfig(env);
+        throw new Error("expected to throw");
+      } catch (err) {
+        expect(err).toBeInstanceOf(ConfigValidationError);
+        expect((err as ConfigValidationError).code).toBe(
+          CONFIG_ERROR_CODES.ENV_INVALID
+        );
+        expect((err as ConfigValidationError).variable).toBe("LOG_LEVEL");
+      }
+    });
+  });
 });
 
 describe("loadIndexerConfig", () => {
@@ -281,4 +353,5 @@ describe("ConfigValidationError", () => {
       expect((err as ConfigValidationError).variable).toBe("PORT");
     }
   });
+
 });
